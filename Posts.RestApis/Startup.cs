@@ -12,6 +12,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Posts.BusinessLogic;
 using Posts.DataAccess;
+using Posts.Entities.Models;
 
 namespace Posts.RestApis
 {
