@@ -44,8 +44,20 @@ namespace Posts.DataAccess
 
         public async Task<Post> CrearPost(Post post)
         {
-            await _collection.InsertOneAsync(post);
-            return await GetById(post.id);
+            var filter = Builders<Post>.Filter.Eq("Id", post.id);
+
+            var updateDefinition = Builders<Post>.Update
+                            .Set("Titulo", post.Titulo)
+                            .Set("Descripcion", post.Descripcion)
+                            .Set("Autor", post.Autor)
+                            .Set("Categoria", post.Categoria);
+
+            var options = new FindOneAndUpdateOptions<Post,Post>{
+                IsUpsert = true,
+                ReturnDocument = ReturnDocument.After
+            };                
+            return await _collection.FindOneAndUpdateAsync(filter, updateDefinition, options);
+            
             /*
             post.id = "abc";
             return await Task.FromResult(post) ; 
