@@ -34,5 +34,17 @@ namespace Posts.DataAccess
             return await  _collection.FindOneAndUpdateAsync(filter, updateDefinition, options);
             
         }
+
+        public async Task<User> GetUserById(string id)
+        {
+             var filter = Builders<User>.Filter.Eq("Id",id);
+            return await _collection.Find(filter).FirstOrDefaultAsync();
+        }
+
+        public async Task<User> GetuserByUsername(string username)
+        {
+            var filter = Builders<User>.Filter.Eq("Username",username);
+            return await _collection.Find(filter).FirstOrDefaultAsync();
+        }
     }
 }

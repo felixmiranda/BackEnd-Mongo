@@ -1,6 +1,8 @@
 using System;
 using System.Linq;
+using System.Threading.Tasks;
 using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Posts.BusinessLogic;
@@ -8,7 +10,7 @@ using Posts.Entities.Models;
 
 namespace Posts.RestApis.Controllers
 {
-
+  [Authorize]
   [Route("api/users")]
   public class UsersController : Controller
   {
@@ -24,11 +26,14 @@ namespace Posts.RestApis.Controllers
     }
 
     [HttpGet]
-    public IActionResult Get()
+    public async Task<IActionResult> Get(string id )
     {
       try
       {
-        return Ok();
+        var user = await _repository.GetUserById(id);
+
+        return Ok(user);
+        
       }
       catch (Exception)
       {
@@ -36,21 +41,31 @@ namespace Posts.RestApis.Controllers
         return BadRequest();
       }
     }
-
+    [AllowAnonymous]
     [HttpPost]
-    public IActionResult Post([FromBody] UserDTO userDTO)
+    public async Task<IActionResult> Post([FromBody] UserDTO userDTO)
     {
       try
       {
         var user = _mapper.Map<User>(userDTO);
-        var userCreated = _repository.CreateUser(user);
-        return CreatedAtAction(nameof(Get), new { id = userCreated.Id, userCreated});
+        var userCreated = await _repository.CreateUser(user);
+        //return CreatedAtAction(nameof(Get), new { id = userCreated.Id, userCreated});
+        return  Ok(userCreated);
       }
       catch (Exception)
       {
         _logger.LogError("Failed to execute POST");
         return BadRequest();
       }
+    }
+        
+    [AllowAnonymous]
+    [HttpPost("authenticate")]
+    public async Task<IActionResult> Authenticate([FromBody] UserDTO userDTO)
+    {
+      var result = await _repository.Authenticate(userDTO.Username, userDTO.Password);
+
+      return Ok(result);
     }
 
     [HttpPut]

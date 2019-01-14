@@ -14,6 +14,9 @@ using Posts.BusinessLogic;
 using Posts.DataAccess;
 using Posts.Entities.Models;
 using AutoMapper;
+using System.Text;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
 
 namespace Posts.RestApis
 {
@@ -36,6 +39,10 @@ namespace Posts.RestApis
                 options.Database = Configuration.GetSection("DBSettings:Database").Value;
             });
 
+            var appSettingsSection =  Configuration.GetSection("AppSettings");
+            services.Configure<AppSettings>(appSettingsSection);
+
+            ConfigureTokenAuthentication(services,appSettingsSection);
             services.AddAutoMapper();
 
             services.AddTransient<IPostRepository, PostRepository>();
@@ -43,11 +50,47 @@ namespace Posts.RestApis
             services.AddTransient<IPostDataContext, PostDataContext>();
             services.AddTransient<IUserDataContext, UserDataContext>();
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
+            services.AddCors();
+
+        }
+
+        private void ConfigureTokenAuthentication(IServiceCollection services, IConfigurationSection appSettingsSection)
+        {
+            var appSettings = appSettingsSection.Get<AppSettings>();
+            var key = Encoding.ASCII.GetBytes(appSettings.Secret);
+
+            services.AddAuthentication( x=>
+            {
+                x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                x.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+            })
+            .AddJwtBearer(x=>
+            {
+                x.RequireHttpsMetadata = false;
+                x.SaveToken = true;
+                x.TokenValidationParameters = new Microsoft.IdentityModel.Tokens.TokenValidationParameters
+                {
+                    ValidateIssuerSigningKey = true,
+                    IssuerSigningKey = new SymmetricSecurityKey(key),
+                    ValidateIssuer = false, // de donde vienen las llamadas
+                    ValidateAudience = false, // de que ip es llamado
+                    ClockSkew = TimeSpan.Zero 
+                };
+            });
+
+            
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IHostingEnvironment env)
         {
+            app.UseCors( x=> x
+                .AllowAnyOrigin()
+                .AllowAnyMethod()
+                .AllowAnyHeader()
+                .AllowCredentials()
+            );
+
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
@@ -59,6 +102,7 @@ namespace Posts.RestApis
             }
 
             //app.UseHttpsRedirection();
+            app.UseAuthentication();
             app.UseMvc();
         }
     }
