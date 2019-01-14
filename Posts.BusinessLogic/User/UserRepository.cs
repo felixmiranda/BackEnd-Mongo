@@ -3,6 +3,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using MongoDB.Bson;
 using Posts.DataAccess;
@@ -14,10 +15,10 @@ namespace Posts.BusinessLogic
     {
         private readonly IUserDataContext _context;
         private readonly AppSettings _appSettings; 
-        public UserRepository(IUserDataContext context,AppSettings appSettings)
+        public UserRepository(IUserDataContext context,IOptions<AppSettings>  appSettings)
         {
             _context = context; 
-            _appSettings = appSettings; 
+            _appSettings = appSettings.Value; 
         }
 
         public async Task<User> Authenticate(string username, string password)

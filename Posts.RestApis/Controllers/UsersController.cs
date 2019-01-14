@@ -25,7 +25,7 @@ namespace Posts.RestApis.Controllers
       _mapper = mapper; 
     }
 
-    [HttpGet]
+    [HttpGet("{id}")]
     public async Task<IActionResult> Get(string id )
     {
       try
@@ -63,9 +63,16 @@ namespace Posts.RestApis.Controllers
     [HttpPost("authenticate")]
     public async Task<IActionResult> Authenticate([FromBody] UserDTO userDTO)
     {
-      var result = await _repository.Authenticate(userDTO.Username, userDTO.Password);
+      try {
+          var result = await _repository.Authenticate(userDTO.Username, userDTO.Password);
 
-      return Ok(result);
+          return Ok(result);
+      }
+      catch(Exception ex)
+      {
+        throw ex;
+      }
+      
     }
 
     [HttpPut]
