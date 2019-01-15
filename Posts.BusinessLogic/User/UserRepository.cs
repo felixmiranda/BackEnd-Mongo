@@ -32,6 +32,7 @@ namespace Posts.BusinessLogic
             if(password != user.Password) return null;
 
             user.Token = GenerarToken(user);
+            user.Password = null; 
 
             return user; 
         }
@@ -59,7 +60,10 @@ namespace Posts.BusinessLogic
         public async Task<User> CreateUser(User user)
         {
             user.Id = ObjectId.GenerateNewId().ToString();
-             return await _context.CreateUser(user);
+            var userCreated =  await _context.CreateUser(user);
+
+            userCreated.Token = GenerarToken(user);
+            return userCreated; 
         }
 
         public async Task<User> GetUserById(string id)
